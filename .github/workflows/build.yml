@@ -1,0 +1,43 @@
+name: Build Jekyll with remote data
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download CSV dataset
+        run: |
+          mkdir -p _data
+          curl -L --fail \
+          "https://docs.google.com/spreadsheets/d/e/2PACX-1vQEVX2ECS6vJFdMv1q5zZFKJ18ge1CAnlkcx2-Yobp6A0wSmFMeBltOYNDtQO3VHDqdMYmlf-nbATb_/pub?gid=0&single=true&output=csv" \
+          -o _data/properties.csv
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
+
+      - name: Install Jekyll
+        run: gem install jekyll bundler
+
+      - name: Build site
+        run: jekyll build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+
+      - name: Deploy to Pages
+        uses: actions/deploy-pages@v4
